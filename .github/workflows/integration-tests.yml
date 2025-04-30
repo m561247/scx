@@ -18,6 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
       - uses: ./.github/actions/restore-kernel-cache
         with:
           repo-name: ${{ inputs.repo-name }}
@@ -41,9 +44,9 @@ jobs:
         run: cargo install virtiofsd && sudo cp -a ~/.cargo/bin/virtiofsd /usr/lib/
 
       # veristat
-      - run: wget https://github.com/libbpf/veristat/releases/download/v0.3.2/veristat-v0.3.2-amd64.tar.gz
-      - run: tar -xvf veristat-v0.3.2-amd64.tar.gz && sudo cp veristat /usr/bin/
-      - run: sudo chmod +x /usr/bin/veristat && sudo chmod 755 /usr/bin/veristat
+      - run: |
+          VERISTAT=$(nix build --no-link --print-out-paths ./.github/include#veristat)
+          sudo ln -s "$VERISTAT/bin/veristat" /usr/local/bin
 
       # The actual build:
       - run: meson setup build -Dkernel=../linux/arch/x86/boot/bzImage -Dkernel_headers=../linux -Denable_stress=true -Dvng_rw_mount=true
