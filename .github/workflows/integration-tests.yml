@@ -67,9 +67,19 @@ jobs:
             scheduler: ${{ fromJson(needs.list-tests.outputs.matrix) }}
           fail-fast: false
     steps:
+      - name: Install Nix
+        if: ${{ runner.environment == 'github-hosted' }}
+        uses: DeterminateSystems/nix-installer-action@main
+
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/restore-kernel-cache
+        with:
+          repo-name: ${{ inputs.repo-name }}
+
+      - run: rm linux/arch/x86/boot/bzImage
+
+      - uses: ./.github/actions/build-kernel
         with:
           repo-name: ${{ inputs.repo-name }}
 
